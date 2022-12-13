@@ -40,6 +40,7 @@ class HeckfireApi(object):
         }
 
     def update_token(self):
+        """Update the user's token"""
         data = {
             "grant_type": "password",
             "client_version": self.client,
@@ -53,7 +54,7 @@ class HeckfireApi(object):
             "password": self.password,
         }
         url = f"{self.base_url}/game/auth/oauth/"
-        req = requests.post(url, data=data)
+        req = requests.post(url, data=data, timeout=REQUEST_TIMEOUT)
         if req.status_code == 200:
             res = req.json()
             self.token = res["access_token"].strip()
@@ -66,7 +67,8 @@ class HeckfireApi(object):
             )
 
     def stay_alive(self):
-        """Sends the first and second half of each token to the ticket response to keep the token alive."""
+        """Sends the first and second half of each token to
+        the ticket response to keep the token alive."""
         data = {
             "authorization": f"Session {self.staytoken}:{self.token}",
             "Accept": "application/json",
@@ -143,7 +145,8 @@ class HeckfireApi(object):
         return chats
 
     def poll_realm_list(self):
-        """Polls the list of active realms usercounts, names and descriptions, returns the shards response only"""
+        """Polls the list of active realms usercounts,
+        names and descriptions, returns the shards response only"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/shard/get_transferable_shards/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
@@ -168,7 +171,7 @@ class HeckfireApi(object):
         """Polls the clans top troop kills leaderboards for given tokens realm"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/leaderboard/get_group_troopkill_leaderboard"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
         group_troopkill_leaderboard = json_data["group_troopkill_leaderboard_leaders"]
         if json_data.get("exception"):
@@ -230,7 +233,7 @@ class HeckfireApi(object):
         return tiles
 
     def get_clan_for_user(self):
-        """Sends request to api to grab the current clan for logged in user, 
+        """Sends request to api to grab the current clan for logged in user,
         pulls group_id from response"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/group/get_group_for_user/"
