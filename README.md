@@ -27,7 +27,7 @@ source env/bin/activate
 pip install -r requirements/local.txt
 ```
 
-6. Fill in ```heckguide/sample.env``` and rename to ```.env```
+6. Fill in ```heckguide/sample.env``` and rename to ```heckguide/.env```
 
 7. Make migrations and then run migrations
 ```
@@ -35,27 +35,27 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-8. Create a superuser
+1. Create a superuser
 ```
 python manage.py createsuperuser
 ```
 
-9. Generate an API token for the newly created superuser
+1. Generate an API token for the newly created superuser
 ```
 python manage.py drf_create_token superusername
 ```
 
-10. Run server
+1.  Run server
 ```
 python manage.py runserver
 ```
 
-11. Open website
+1.  Open website
 ```
 http://127.0.0.1:8000/
 ```
 
-12. Development website
+1.  Development website
 ```
 https://v2.heckguide.com/
 ```
