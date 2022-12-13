@@ -7,8 +7,10 @@ from .models import WorldSegments
 from discord_webhook import DiscordWebhook
 from django.conf import settings
 from home.models import Webhooks
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
 
 class WorldImporter:
     def __init__(self, token: str, staytoken: str):
@@ -22,27 +24,44 @@ class WorldImporter:
         results = []
         for segment in segments:
             try:
-                data = {key: value for key, value in segment.items() if key in self.model_fields}
-                if data['owner_username']:
-                    logger.info(f"Found player: {data['owner_username']} Clan: {data['owner_group_name']}")
-                if "Titan [Lv" in data['name']:
-                    self.api.message_clan(f"{data['name']} X: {data['x']} Y: {data['y']}")
+                data = {
+                    key: value
+                    for key, value in segment.items()
+                    if key in self.model_fields
+                }
+                if data["owner_username"]:
+                    logger.info(
+                        f"Found player: {data['owner_username']} Clan: {data['owner_group_name']}"
+                    )
+                if "Titan [Lv" in data["name"]:
+                    self.api.message_clan(
+                        f"{data['name']} X: {data['x']} Y: {data['y']}"
+                    )
                 for webhook in self.webhooks.iterator():
                     item = webhook.item
                     hookurl = webhook.hookurl
                     realm = webhook.realm
-                    if data['name'] == item and data['owner_username'] is None:
-                        if data['world_id'] == realm:
-                            webhook = DiscordWebhook(url=(f'{hookurl}'), content=(f"{data['name']} X: {data['x']} Y: {data['y']}"))
+                    if data["name"] == item and data["owner_username"] is None:
+                        if data["world_id"] == realm:
+                            webhook = DiscordWebhook(
+                                url=(f"{hookurl}"),
+                                content=(
+                                    f"{data['name']} X: {data['x']} Y: {data['y']}"
+                                ),
+                            )
                             webhook.execute()
-                data['name'] = self.process_component(data['name'])
+                data["name"] = self.process_component(data["name"])
             except (TypeError, AttributeError) as e:
                 pass
             results.append(data)
         return results
 
     def process_component(self, component_data: Dict) -> WorldSegments:
-        data = {key: value for key, value in component_data.items() if key in self.model_fields}
+        data = {
+            key: value
+            for key, value in component_data.items()
+            if key in self.model_fields
+        }
         return self.update_or_create_segment(data)
 
     def update_or_create_segments(self, data: List[Dict]) -> None:
@@ -51,8 +70,10 @@ class WorldImporter:
 
     def update_or_create_segment(self, data: Dict) -> WorldSegments:
         segment_data = data.copy()
-        object_id = segment_data.pop('object_id')
-        obj, created = WorldSegments.objects.update_or_create(object_id=object_id, defaults=segment_data)
+        object_id = segment_data.pop("object_id")
+        obj, created = WorldSegments.objects.update_or_create(
+            object_id=object_id, defaults=segment_data
+        )
         self.record_count(created)
         return obj
 
@@ -72,9 +93,13 @@ class WorldImporter:
         while lowerbound < upperbound:
             try:
                 data = self.api.fetch_world(lowerbound)
-                logger.info(f"Crawling bound: Lower Bound {[i for i in range(lowerbound, lowerbound + 20)]} Upper Bound {upperbound}")
+                logger.info(
+                    f"Crawling bound: Lower Bound {[i for i in range(lowerbound, lowerbound + 20)]} Upper Bound {upperbound}"
+                )
             except TokenException as e:
-                logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+                logger.info(
+                    f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                )
                 time.sleep(60)
                 data = self.api.fetch_world(lowerbound)
             try:
