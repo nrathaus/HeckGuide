@@ -111,3 +111,38 @@ Install libpq library, on Debian:
 ```
 apt install libpq-dev
 ```
+
+2. Missing PosgresSQL:
+
+Install:
+```
+sudo apt install postgresql postgresql-contrib
+```
+
+Make sure it works:
+```
+sudo -u postgres psql -c "SELECT version();"
+```
+
+Output should be something like:
+```
+ PostgreSQL 14.5 (Ubuntu 14.5-0ubuntu0.22.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.2.0-19ubuntu1) 11.2.0, 64-bit
+```
+
+Create User (heckguide) and DB (heckguide):
+```
+sudo su - postgres -c "CREATEUSER heckguide"
+sudo su - postgres -c "CREATEDB heckguide"
+```
+
+Give `heckguide` user access:
+```
+sudo -u postgres psql
+GRANT ALL PRIVILEGES ON DATABASE heckguide TO heckguide;
+ALTER USER heckguide WITH PASSWORD 'heckguide';
+```
+
+Change `.env` to this URL:
+```
+DATABASE_URL="postgres://heckguide:heckguide@127.0.0.1:5432/heckguide"
+```
