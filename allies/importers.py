@@ -9,6 +9,7 @@ from .models import Ally, HistoricalAlly, Clan
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+
 class BaseAllyImporter:
     def __init__(self, token: str, staytoken: str):
         self.api = HeckfireApi(token=token, staytoken=staytoken)
@@ -21,8 +22,12 @@ class BaseAllyImporter:
         results = []
         for ally in allies:
             try:
-                data = {key: value for key, value in ally.items() if key in self.model_fields}
-                data['owner'] = self.process_owner(data['owner'])
+                data = {
+                    key: value
+                    for key, value in ally.items()
+                    if key in self.model_fields
+                }
+                data["owner"] = self.process_owner(data["owner"])
                 logger.info(f"Found ally: {data['username']}")
             except (TypeError, AttributeError) as e:
                 logger.info(f"NoneType Error Exception: {e}")
@@ -30,7 +35,9 @@ class BaseAllyImporter:
         return results
 
     def process_owner(self, owner_data: Dict) -> Ally:
-        data = {key: value for key, value in owner_data.items() if key in self.model_fields}
+        data = {
+            key: value for key, value in owner_data.items() if key in self.model_fields
+        }
         return self.update_or_create_ally(data)
 
     def update_or_create_allies(self, data: List[Dict]) -> None:
@@ -39,8 +46,10 @@ class BaseAllyImporter:
 
     def update_or_create_ally(self, data: Dict) -> Ally:
         ally_data = data.copy()
-        user_id = ally_data.pop('user_id')
-        obj, created = Ally.objects.update_or_create(user_id=user_id, defaults=ally_data)
+        user_id = ally_data.pop("user_id")
+        obj, created = Ally.objects.update_or_create(
+            user_id=user_id, defaults=ally_data
+        )
         self.record_count(created)
         return obj
 
@@ -61,16 +70,20 @@ class BaseAllyImporter:
 
 
 class AllyByPriceImporter(BaseAllyImporter):
-    def execute(self,  price: int, page_count: int):
-        logger.info(f"Starting ally crawler for price: {price} with page count: {page_count}")
+    def execute(self, price: int, page_count: int):
+        logger.info(
+            f"Starting ally crawler for price: {price} with page count: {page_count}"
+        )
         for i in range(page_count):
             try:
                 data = self.api.get_allies_by_price(price, i)
             except TokenException as e:
-                logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+                logger.info(
+                    f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                )
                 time.sleep(60)
             data = self.api.get_allies_by_price(price, i)
-            allies = self.format_allies(data['allies'])
+            allies = self.format_allies(data["allies"])
             self.update_or_create_allies(allies)
             self.create_historical_allies(allies)
 
@@ -81,16 +94,19 @@ class AllyByPriceImporter(BaseAllyImporter):
         self.api.collect_loot()
         logger.info(f"Collecting Loot")
 
+
 class RandomAllyByPriceImporter(BaseAllyImporter):
     def execute(self):
-        price = random.randint(0,8000000000)
+        price = random.randint(0, 8000000000)
         try:
             logger.info(f"Starting ally crawler for price: {price}")
             data = self.api.get_allies_by_price(price, 1)
         except TokenException as e:
-            logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+            logger.info(
+                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+            )
             time.sleep(60)
-        allies = self.format_allies(data['allies'])
+        allies = self.format_allies(data["allies"])
         self.update_or_create_allies(allies)
         self.create_historical_allies(allies)
         logger.info(f"Created {self.created_count} records")
@@ -102,7 +118,6 @@ class RandomAllyByPriceImporter(BaseAllyImporter):
 
 
 class AllyByNameImporter(BaseAllyImporter):
-
     def execute(self, seed_list: List, depth: int):
         for name in seed_list:
             logger.info(f"Crawling name: {name} with a depth of {depth}")
@@ -123,14 +138,16 @@ class AllyByNameImporter(BaseAllyImporter):
             stay_alive = self.api.stay_alive()
             logger.info(f"Keeping token alive: {stay_alive['timestamp']}")
         except TokenException as e:
-            logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+            logger.info(
+                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+            )
             time.sleep(60)
             data = self.api.get_ally_by_name(name)
         try:
-            ally = self.format_allies(data['allies'])[0]
+            ally = self.format_allies(data["allies"])[0]
             self.update_or_create_ally(ally)
             self.create_historical_allies([ally])
-            owner = ally['owner']
+            owner = ally["owner"]
             if owner and owner.username:
                 self.crawl_name(owner.username, depth - 1)
         except IndexError as e:
@@ -138,7 +155,6 @@ class AllyByNameImporter(BaseAllyImporter):
 
 
 class UpdateAllyImporter(BaseAllyImporter):
-
     def execute(self, name: str):
         logger.info(f"Updating name: {name}")
         stay_alive = self.api.stay_alive()
@@ -148,17 +164,20 @@ class UpdateAllyImporter(BaseAllyImporter):
         try:
             data = self.api.get_ally_by_name(name)
         except TokenException as e:
-            logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+            logger.info(
+                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+            )
             time.sleep(60)
             data = self.api.get_ally_by_name(name)
         try:
-            ally = self.format_allies(data['allies'])[0]
+            ally = self.format_allies(data["allies"])[0]
             self.update_or_create_ally(ally)
             self.create_historical_allies([ally])
         except IndexError as e:
             logger.info(f"Index Error (Ally changed name since scrape?) Exception: {e}")
         logger.info(f"Created {self.created_count} records")
         logger.info(f"Updated {self.updated_count} records")
+
 
 class ClanImporter:
     def __init__(self, token: str, staytoken: str):
@@ -170,7 +189,9 @@ class ClanImporter:
     def format_clan(self, data) -> List[Dict]:
         results = []
         try:
-            data = {key: value for key, value in Clan.items() if key in self.model_fields}
+            data = {
+                key: value for key, value in Clan.items() if key in self.model_fields
+            }
             logger.info(f"Found clan: {data['name']}")
         except (TypeError, AttributeError) as e:
             logger.info(f"NoneType Error Exception: {e}")
@@ -183,7 +204,7 @@ class ClanImporter:
 
     def update_or_create_ally(self, data: Dict) -> Clan:
         clan_data = data.copy()
-        id = clan_data.pop('id')
+        id = clan_data.pop("id")
         obj, created = Clan.objects.update_or_create(id=id, defaults=clan_data)
         self.record_count(created)
         return obj
@@ -194,12 +215,14 @@ class ClanImporter:
         else:
             self.updated_count += 1
 
-    def execute(self,  group_id: int):
+    def execute(self, group_id: int):
         logger.info(f"Starting clan crawler: {group_id}")
         try:
             data = self.api.get_clan_by_id(group_id)
         except TokenException as e:
-            logger.info(f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}")
+            logger.info(
+                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+            )
             time.sleep(60)
         data = self.api.get_clan_by_id(group_id)
         clans = self.format_clan(data)
