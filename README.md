@@ -35,27 +35,29 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-1. Create a superuser
+8. Create a superuser
 ```
 python manage.py createsuperuser
 ```
 
-1. Generate an API token for the newly created superuser
+9. Generate an API token for the newly created superuser (the one from step 8)
 ```
 python manage.py drf_create_token superusername
 ```
 
-1.  Run server
+Make note of the token
+
+10.  Run server
 ```
 python manage.py runserver
 ```
 
-1.  Open website
+11.  Open website
 ```
 http://127.0.0.1:8000/
 ```
 
-1.  Development website
+12.  Development website
 ```
 https://v2.heckguide.com/
 ```
