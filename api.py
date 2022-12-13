@@ -1,9 +1,11 @@
-import requests
+""" API Endpoints """
 import json
 from typing import Dict
+import requests
 
 
 class TokenException(Exception):
+    """ Empty class """
     pass
 
 
@@ -11,6 +13,7 @@ REQUEST_TIMEOUT = 5
 
 
 class HeckfireApi(object):
+    """ Heckfire API Class """
     def __init__(
         self,
         user: str = None,
@@ -29,7 +32,7 @@ class HeckfireApi(object):
         if token:
             self.token = token
         else:
-            self.token = self.update_token()
+            self.update_token()
 
         self.headers = {
             "Authorization": f"Bearer {self.token}",
@@ -206,7 +209,7 @@ class HeckfireApi(object):
         return mails
 
     def _post(self, url: str, data: Dict) -> Dict:
-        response = requests.post(url, headers=self.headers, data=data)
+        response = requests.post(url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(response.text)
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -218,7 +221,7 @@ class HeckfireApi(object):
         tiles = []
         url = f"{self.base_url}/game/nonessential/poll_segments_realm_state"
         data = {"segment_ids": [i for i in range(lowerbound, lowerbound + 20)]}
-        req = requests.post(url, headers=self.headers, data=data)
+        req = requests.post(url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT)
         json_data = req.json()
         sites = json_data["world_state"]["sites"]
         for tile in sites:
@@ -227,7 +230,8 @@ class HeckfireApi(object):
         return tiles
 
     def get_clan_for_user(self):
-        """Sends request to api to grab the current clan for logged in user, pulls group_id from response"""
+        """Sends request to api to grab the current clan for logged in user, 
+        pulls group_id from response"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/group/get_group_for_user/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
