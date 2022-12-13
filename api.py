@@ -1,8 +1,13 @@
 import requests
 import json
 from typing import Dict
+
+
 class TokenException(Exception):
     pass
+
+
+REQUEST_TIMEOUT = 5
 
 
 class HeckfireApi(object):
@@ -13,9 +18,9 @@ class HeckfireApi(object):
         client: str = "1.93",
         version: str = "2922",
         token: str = None,
-        staytoken: str = None
+        staytoken: str = None,
     ):
-        self.base_url = 'https://api.kingdomsofheckfire.com'
+        self.base_url = "https://api.kingdomsofheckfire.com"
         self.user = user
         self.password = password
         self.client = client
@@ -26,7 +31,10 @@ class HeckfireApi(object):
         else:
             self.token = self.update_token()
 
-        self.headers = {"Authorization": f"Bearer {self.token}", "Accept": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Accept": "application/json",
+        }
 
     def update_token(self):
         data = {
@@ -39,7 +47,7 @@ class HeckfireApi(object):
             "version": self.version,
             "include_tech_tree": "False",
             "username": self.user,
-            "password": self.password
+            "password": self.password,
         }
         url = f"{self.base_url}/game/auth/oauth/"
         req = requests.post(url, data=data)
@@ -50,26 +58,31 @@ class HeckfireApi(object):
             error = req.json()
             print(error)
             message = error["exception"]
-            raise TokenException(f"Failed to fetch token from heck api. Error: {message}")
+            raise TokenException(
+                f"Failed to fetch token from heck api. Error: {message}"
+            )
 
     def stay_alive(self):
         """Sends the first and second half of each token to the ticket response to keep the token alive."""
-        data = {"authorization": f"Session {self.staytoken}:{self.token}", "Accept": "application/json"}
+        data = {
+            "authorization": f"Session {self.staytoken}:{self.token}",
+            "Accept": "application/json",
+        }
         url = f"{self.base_url}/support/tickets/"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return json_data
 
     def collect_loot(self):
         """Collects any sold ally gold from the treasury."""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/resource/collect_unlootable_resources/"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return json_data
 
     def get_user_by_name(self, username: str) -> Dict:
@@ -89,17 +102,17 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/group/get_group/"
         data = {"group_id": group_id}
         return self._post(url, data)
-	
+
     def get_allies_by_price(self, price: int, offset: int = 0) -> Dict:
         """Searches the ally api using max cost and page offset."""
         url = f"{self.base_url}/game/ally/search_allies"
-        data = {'max_cost': price, 'offset': offset}
+        data = {"max_cost": price, "offset": offset}
         return self._post(url, data)
 
     def buy_ally(self, username: str, cost: int) -> Dict:
         """Purchases an ally by ID and expected cost to the current logged in account."""
         url = f"{self.base_url}/game/ally/buy_ally"
-        data = {'ally_user_id': username, 'expected_cost': cost}
+        data = {"ally_user_id": username, "expected_cost": cost}
         return self._post(url, data)
 
     def poll_chat(self):
@@ -107,11 +120,11 @@ class HeckfireApi(object):
         Currently only returning the global chat."""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/poll/chat"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        chats = json_data['global_messages']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        chats = json_data["global_messages"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return chats
 
     def poll_clan_chat(self):
@@ -119,84 +132,84 @@ class HeckfireApi(object):
         Currently only returning the global chat."""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/poll/chat"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        chats = json_data['group_chat']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        chats = json_data["group_chat"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return chats
 
     def poll_realm_list(self):
         """Polls the list of active realms usercounts, names and descriptions, returns the shards response only"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/shard/get_transferable_shards/"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        realms = json_data['shards']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        realms = json_data["shards"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return realms
 
     def poll_group_power_leaderboard(self):
         """Polls the clans top might/power leaderboards for given tokens realm"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/leaderboard/get_group_power_leaderboard"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        group_power_leaderboard = json_data['group_power_leaderboard_leaders']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        group_power_leaderboard = json_data["group_power_leaderboard_leaders"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return group_power_leaderboard
-        
+
     def poll_group_troopkill_leaderboard(self):
         """Polls the clans top troop kills leaderboards for given tokens realm"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/leaderboard/get_group_troopkill_leaderboard"
         req = requests.get(url, headers=data)
         json_data = json.loads(req.text)
-        group_troopkill_leaderboard = json_data['group_troopkill_leaderboard_leaders']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        group_troopkill_leaderboard = json_data["group_troopkill_leaderboard_leaders"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return group_troopkill_leaderboard
 
     def poll_user_power_leaderboard(self):
         """Polls the user top might/power leaderboards for given tokens realm"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/leaderboard/get_user_power_leaderboard"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        user_power_leaderboard = json_data['user_power_leaderboard_leaders']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        user_power_leaderboard = json_data["user_power_leaderboard_leaders"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return user_power_leaderboard
 
     def poll_user_troopkill_leaderboard(self):
         """Polls the user troop kills leaderboards for given tokens realm"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/leaderboard/get_user_troopkill_leaderboard"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        user_troopkill_leaderboard = json_data['user_troopkill_leaderboard_leaders']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        user_troopkill_leaderboard = json_data["user_troopkill_leaderboard_leaders"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return user_troopkill_leaderboard
 
     def poll_mail(self):
         """Polls the logged in users mail."""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/poll/mail"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        mails = json_data['mails']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        mails = json_data["mails"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return mails
 
     def _post(self, url: str, data: Dict) -> Dict:
         response = requests.post(url, headers=self.headers, data=data)
         json_data = json.loads(response.text)
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return json_data
 
     def fetch_world(self, lowerbound: int):
@@ -217,11 +230,11 @@ class HeckfireApi(object):
         """Sends request to api to grab the current clan for logged in user, pulls group_id from response"""
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/group/get_group_for_user/"
-        req = requests.get(url, headers=data)
+        req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
-        group_id = json_data['id']
-        if json_data.get('exception'):
-            raise TokenException(json_data['exception'])
+        group_id = json_data["id"]
+        if json_data.get("exception"):
+            raise TokenException(json_data["exception"])
         return group_id
 
     def get_clan_requests(self):
