@@ -5,7 +5,8 @@ import requests
 
 
 class TokenException(Exception):
-    """ Empty class """
+    """Empty class"""
+
     pass
 
 
@@ -13,7 +14,8 @@ REQUEST_TIMEOUT = 5
 
 
 class HeckfireApi(object):
-    """ Heckfire API Class """
+    """Heckfire API Class"""
+
     def __init__(
         self,
         user: str = None,
@@ -127,6 +129,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/poll/chat"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "global_messages" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         chats = json_data["global_messages"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -139,6 +147,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/poll/chat"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "group_chat" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         chats = json_data["group_chat"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -151,6 +165,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/shard/get_transferable_shards/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "shards" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         realms = json_data["shards"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -162,6 +182,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/leaderboard/get_group_power_leaderboard"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "group_power_leaderboard_leaders" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         group_power_leaderboard = json_data["group_power_leaderboard_leaders"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -173,6 +199,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/leaderboard/get_group_troopkill_leaderboard"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "group_troopkill_leaderboard_leaders" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         group_troopkill_leaderboard = json_data["group_troopkill_leaderboard_leaders"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -184,6 +216,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/leaderboard/get_user_power_leaderboard"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "user_power_leaderboard_leaders" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         user_power_leaderboard = json_data["user_power_leaderboard_leaders"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -195,6 +233,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/leaderboard/get_user_troopkill_leaderboard"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "user_troopkill_leaderboard_leaders" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         user_troopkill_leaderboard = json_data["user_troopkill_leaderboard_leaders"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -206,13 +250,21 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/poll/mail"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "mails" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         mails = json_data["mails"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
         return mails
 
     def _post(self, url: str, data: Dict) -> Dict:
-        response = requests.post(url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT)
+        response = requests.post(
+            url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT
+        )
         json_data = json.loads(response.text)
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
@@ -224,8 +276,16 @@ class HeckfireApi(object):
         tiles = []
         url = f"{self.base_url}/game/nonessential/poll_segments_realm_state"
         data = {"segment_ids": [i for i in range(lowerbound, lowerbound + 20)]}
-        req = requests.post(url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT)
+        req = requests.post(
+            url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT
+        )
         json_data = req.json()
+
+        if "world_state" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         sites = json_data["world_state"]["sites"]
         for tile in sites:
             tiles.append(sites[tile])
@@ -239,6 +299,12 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/group/get_group_for_user/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        if "id" not in json_data:
+            raise TokenException(
+                f"Could not query serverm verify that {self.token=} is valid/assigned"
+            )
+
         group_id = json_data["id"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
