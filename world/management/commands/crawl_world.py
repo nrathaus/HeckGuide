@@ -6,6 +6,7 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
+    """Crawl through the world using selected token"""
     help = "Crawl through the world using selected token"
 
     def add_arguments(self, parser):
