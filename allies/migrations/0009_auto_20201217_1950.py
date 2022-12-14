@@ -7,18 +7,28 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('allies', '0008_auto_20201217_1920'),
+        ("allies", "0008_auto_20201217_1920"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='ally',
-            name='owner',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='owned_allies', to='allies.ally'),
+            model_name="ally",
+            name="owner",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="owned_allies",
+                to="allies.ally",
+            ),
         ),
         migrations.AlterField(
-            model_name='historicalally',
-            name='owner',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='owned_historical_allies', to='allies.ally'),
+            model_name="historicalally",
+            name="owner",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.RESTRICT,
+                related_name="owned_historical_allies",
+                to="allies.ally",
+            ),
         ),
     ]

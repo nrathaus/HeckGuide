@@ -6,20 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('poll', '0002_auto_20210918_0023'),
+        ("poll", "0002_auto_20210918_0023"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RealmList',
+            name="RealmList",
             fields=[
-                ('id', models.IntegerField(db_index=True, primary_key=True, serialize=False)),
-                ('spawned_user_count', models.IntegerField(null=True)),
-                ('maximum_transfer_power', models.IntegerField(null=True)),
-                ('maximum_transfer_townhall_level', models.IntegerField(null=True)),
-                ('name', models.CharField(max_length=255, null=True)),
-                ('subname', models.CharField(max_length=255, null=True)),
-                ('pvp_rating', models.CharField(max_length=255, null=True)),
+                (
+                    "id",
+                    models.IntegerField(
+                        db_index=True, primary_key=True, serialize=False
+                    ),
+                ),
+                ("spawned_user_count", models.IntegerField(null=True)),
+                ("maximum_transfer_power", models.IntegerField(null=True)),
+                ("maximum_transfer_townhall_level", models.IntegerField(null=True)),
+                ("name", models.CharField(max_length=255, null=True)),
+                ("subname", models.CharField(max_length=255, null=True)),
+                ("pvp_rating", models.CharField(max_length=255, null=True)),
             ],
         ),
     ]

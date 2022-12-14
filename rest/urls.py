@@ -3,11 +3,11 @@ from rest_framework import routers
 from rest import views
 
 router = routers.DefaultRouter()
-router.register(r'allies', views.AllyViewSet)
-router.register(r'world', views.MapViewSet)
-router.register(r'changes', views.HistoricalAllySerializerViewSet)
+router.register(r"allies", views.AllyViewSet)
+router.register(r"world", views.MapViewSet)
+router.register(r"changes", views.HistoricalAllySerializerViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path("", include(router.urls)),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]

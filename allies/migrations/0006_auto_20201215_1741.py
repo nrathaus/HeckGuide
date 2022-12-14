@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('allies', '0005_auto_20201215_1647'),
+        ("allies", "0005_auto_20201215_1647"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='CurrentAlly',
-            new_name='Ally',
+            old_name="CurrentAlly",
+            new_name="Ally",
         ),
         migrations.AlterField(
-            model_name='historicalally',
-            name='user_id',
+            model_name="historicalally",
+            name="user_id",
             field=models.IntegerField(db_index=True),
         ),
     ]

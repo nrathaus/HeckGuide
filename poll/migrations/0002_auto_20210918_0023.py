@@ -6,57 +6,57 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('poll', '0001_initial'),
+        ("poll", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='realmchat',
-            name='global_messages',
+            model_name="realmchat",
+            name="global_messages",
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='message',
+            model_name="realmchat",
+            name="message",
             field=models.CharField(max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='region',
+            model_name="realmchat",
+            name="region",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='timestamp',
+            model_name="realmchat",
+            name="timestamp",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='type',
+            model_name="realmchat",
+            name="type",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='user_avatar_id',
+            model_name="realmchat",
+            name="user_avatar_id",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='user_avatar_type',
+            model_name="realmchat",
+            name="user_avatar_type",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='user_id',
+            model_name="realmchat",
+            name="user_id",
             field=models.IntegerField(null=True),
         ),
         migrations.AddField(
-            model_name='realmchat',
-            name='username',
+            model_name="realmchat",
+            name="username",
             field=models.CharField(max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='realmchat',
-            name='id',
+            model_name="realmchat",
+            name="id",
             field=models.IntegerField(db_index=True, primary_key=True, serialize=False),
         ),
     ]

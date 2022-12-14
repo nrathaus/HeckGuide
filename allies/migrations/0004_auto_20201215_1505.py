@@ -7,13 +7,15 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('allies', '0003_auto_20201215_1422'),
+        ("allies", "0003_auto_20201215_1422"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='historicalally',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+            model_name="historicalally",
+            name="id",
+            field=models.UUIDField(
+                default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+            ),
         ),
     ]

@@ -9,18 +9,22 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('home', '0001_initial'),
+        ("home", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='webhooks',
-            name='item',
+            model_name="webhooks",
+            name="item",
             field=models.CharField(max_length=500),
         ),
         migrations.AlterField(
-            model_name='webhooks',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='webhooks', to=settings.AUTH_USER_MODEL),
+            model_name="webhooks",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="webhooks",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

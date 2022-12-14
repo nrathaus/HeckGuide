@@ -6,12 +6,12 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
-    help = 'Find CurrentAlly owner records that have incomplete data'
+    help = "Find CurrentAlly owner records that have incomplete data"
 
     def add_arguments(self, parser):
-        parser.add_argument('seed',  type=int)
-        parser.add_argument('depth',  type=int)
-        parser.add_argument('token',  type=int)
+        parser.add_argument("seed", type=int)
+        parser.add_argument("depth", type=int)
+        parser.add_argument("token", type=int)
 
     def handle(self, *args, **options):
         """
@@ -19,15 +19,17 @@ class Command(BaseCommand):
         that is returned does not returns a partial dataset, so this method looks for allies that have a null
         biome3 attack multiplier and fetches the full dataset for that ally.
 
-        It will first fetch the ally, then the owner, then the owner's owner, etc until we're 'depth' layers deep. 
+        It will first fetch the ally, then the owner, then the owner's owner, etc until we're 'depth' layers deep.
 
         Usage: python manage.py crawl_allies_by_name seed "10" depth "5" token "1"
         """
         staytoken = settings.STAY_ALIVE_TOKEN
         tokens = settings.TOKENS
         for token in tokens:
-          partial_allies = Ally.objects.filter(biome3_attack_multiplier__isnull=True).values('username')
-          seed_list = [a['username'] for a in partial_allies]
-          seed_list = seed_list[:options['seed']]
-          importer = AllyByNameImporter(token=token, staytoken=staytoken)
-          importer.execute(seed_list, depth=options['depth'])
+            partial_allies = Ally.objects.filter(
+                biome3_attack_multiplier__isnull=True
+            ).values("username")
+            seed_list = [a["username"] for a in partial_allies]
+            seed_list = seed_list[: options["seed"]]
+            importer = AllyByNameImporter(token=token, staytoken=staytoken)
+            importer.execute(seed_list, depth=options["depth"])

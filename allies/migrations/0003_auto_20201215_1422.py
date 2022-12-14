@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('allies', '0002_auto_20201215_1421'),
+        ("allies", "0002_auto_20201215_1421"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='currentally',
-            name='group_tag',
+            model_name="currentally",
+            name="group_tag",
             field=models.CharField(max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='historicalally',
-            name='group_tag',
+            model_name="historicalally",
+            name="group_tag",
             field=models.CharField(max_length=255, null=True),
         ),
     ]

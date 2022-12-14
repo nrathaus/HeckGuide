@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class RealmChat(models.Model):
     id = models.IntegerField(primary_key=True, db_index=True)
     username = models.CharField(max_length=255, null=True)
@@ -10,6 +11,7 @@ class RealmChat(models.Model):
     user_avatar_type = models.IntegerField(null=True)
     type = models.IntegerField(null=True)
     region = models.IntegerField(null=True)
+
 
 class ClanChat(models.Model):
     mail_id = models.IntegerField(null=True)
@@ -22,6 +24,7 @@ class ClanChat(models.Model):
     message_type = models.IntegerField(null=True)
     item_id = models.IntegerField(null=True)
     realm = models.IntegerField(null=True)
+
 
 class RealmList(models.Model):
     id = models.IntegerField(primary_key=True, db_index=True)

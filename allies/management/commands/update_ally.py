@@ -6,10 +6,10 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
-    help = 'Find Ally and update'
+    help = "Find Ally and update"
 
     def add_arguments(self, parser):
-        parser.add_argument('username',  type=str)
+        parser.add_argument("username", type=str)
 
     def handle(self, *args, **options):
         """
@@ -19,6 +19,6 @@ class Command(BaseCommand):
         staytoken = settings.STAY_ALIVE_TOKEN
         tokens = settings.TOKENS
         token = random.choice(tokens)
-        name=options['username']
+        name = options["username"]
         importer = UpdateAllyImporter(token=token, staytoken=staytoken)
         importer.execute(name)
