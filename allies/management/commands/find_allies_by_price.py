@@ -14,10 +14,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("price", type=int)
         parser.add_argument("page_count", type=int)
+        parser.add_argument("start_count", type=int)
 
     def handle(self, *args, **options):
         staytoken = settings.STAY_ALIVE_TOKEN
+        # print(f"{staytoken=}")
         tokens = settings.TOKENS
         token = random.choice(tokens)
+        # print(f"{token=}")
         importer = AllyByPriceImporter(token=token, staytoken=staytoken)
-        importer.execute(options["price"], options["page_count"])
+        importer.execute(
+            options["price"], options["page_count"], options["start_count"]
+        )
