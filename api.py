@@ -20,8 +20,8 @@ class HeckfireApi(object):
         self,
         user: str = None,
         password: str = None,
-        client: str = "1.93",
-        version: str = "2922",
+        client: str = "2.28.837437069",
+        version: str = "3314",
         token: str = None,
         staytoken: str = None,
     ):
@@ -78,6 +78,8 @@ class HeckfireApi(object):
         url = f"{self.base_url}/support/tickets/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+
+        # print(f"{json_data=}")
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
         return json_data
@@ -129,6 +131,7 @@ class HeckfireApi(object):
         url = f"{self.base_url}/game/poll/chat"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
         json_data = json.loads(req.text)
+        # print(f"{json_data=}")
 
         if "global_messages" not in json_data:
             raise TokenException(
@@ -141,8 +144,11 @@ class HeckfireApi(object):
         return chats
 
     def poll_clan_chat(self):
-        """Polls the logged in users global/clan and announcement chats.
-        Currently only returning the global chat."""
+        """
+        Polls the logged in users global/clan and announcement chats.
+        Currently only returning the global chat.
+        """
+
         data = {"authorization": f"Bearer {self.token}", "Accept": "application/json"}
         url = f"{self.base_url}/game/poll/chat"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
@@ -156,6 +162,7 @@ class HeckfireApi(object):
         chats = json_data["group_chat"]
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
+
         return chats
 
     def poll_realm_list(self):
@@ -262,9 +269,11 @@ class HeckfireApi(object):
         return mails
 
     def _post(self, url: str, data: Dict) -> Dict:
+        """ Standarized POST request """
         response = requests.post(
             url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT
         )
+
         json_data = json.loads(response.text)
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
