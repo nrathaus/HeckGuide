@@ -78,7 +78,7 @@ class ChatImporter:
             data = self.api.poll_chat()
         except TokenException as e:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                f"ChatImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
             )
             time.sleep(60)
             data = self.api.poll_chat()
@@ -101,6 +101,7 @@ class ClanChatImporter:
     def format_segments(self, segments) -> List[Dict]:
         results = []
         for segment in segments:
+            # print(f"{segment=}")
             try:
                 data = {
                     key: value
@@ -110,8 +111,9 @@ class ClanChatImporter:
                 data["realm"] = self.realm
                 data["mail_id"] = data.pop("id")
                 data["mail_id"] = self.process_component(data["mail_id"])
-            except (TypeError, AttributeError) as e:
+            except (TypeError, AttributeError) as _:
                 pass
+
             results.append(data)
         return results
 
@@ -153,23 +155,26 @@ class ClanChatImporter:
             self.updated_count += 1
 
     def execute(self):
-        logger.info(f"Polling clan chat")
+        logger.info("Polling clan chat")
         self.crawl_chat()
 
     def crawl_chat(self):
         try:
             data = self.api.poll_clan_chat()
-        except TokenException as e:
+        except TokenException as exception:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                "Token exception found, sleeping for 60 seconds "
+                "before retry. Exception: %s",
+                exception,
             )
             time.sleep(60)
             data = self.api.poll_clan_chat()
+
         try:
             segments = self.format_segments(data)
             self.update_or_create_segments(segments)
-        except IndexError as e:
-            logger.info(f"Index Error Exception: {e}")
+        except IndexError as exception:
+            logger.info("Index Error Exception: %s", exception)
 
 
 class RealmListImporter:
