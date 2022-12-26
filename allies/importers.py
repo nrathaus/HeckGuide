@@ -28,9 +28,11 @@ class BaseAllyImporter:
                     if key in self.model_fields
                 }
                 data["owner"] = self.process_owner(data["owner"])
-                logger.info(f"Found ally: {data['username']}")
+
+                # logger.info(f"Found ally: {data['username']}")
             except (TypeError, AttributeError) as e:
-                logger.info(f"NoneType Error Exception: {e}")
+                pass
+                # logger.info(f"NoneType Error Exception: {e}")
             results.append(data)
         return results
 
@@ -70,22 +72,50 @@ class BaseAllyImporter:
 
 
 class AllyByPriceImporter(BaseAllyImporter):
-    def execute(self, price: int, page_count: int):
+    def execute(self, price: int, page_count: int, start_page: int):
         logger.info(
-            f"Starting ally crawler for price: {price} with page count: {page_count}"
+            f"Starting ally crawler for price: "
+            f"{price} with page count: {page_count} "
+            f"with start_page: {start_page}"
         )
-        for i in range(page_count):
+
+        highest = {"total": 0, "price": 0}
+        for i in range(start_page, page_count):
+            print(f"page_count: {i}")
             try:
                 data = self.api.get_allies_by_price(price, i)
             except TokenException as e:
                 logger.info(
-                    f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                    f"AllyByPriceImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
                 )
                 time.sleep(60)
             data = self.api.get_allies_by_price(price, i)
             allies = self.format_allies(data["allies"])
+            for ally in allies:
+                total = (
+                    ally["biome3_attack_multiplier"]
+                    + ally["biome4_attack_multiplier"]
+                    + ally["biome5_attack_multiplier"]
+                ) / 100.0
+
+                if highest["total"] < total:
+                    highest["g"] = ally["biome3_attack_multiplier"] / 100.0
+                    highest["b"] = ally["biome4_attack_multiplier"] / 100.0
+                    highest["s"] = ally["biome5_attack_multiplier"] / 100.0
+                    highest["price"] = ally["cost"]
+                    highest["username"] = ally["username"]
+                    highest["total"] = total
+                    print(f"{highest['username']} with {total=}")
+
+            print(
+                f"'{highest['username']}' with {highest['total']=} for {highest['price']=:,}"
+            )
+            print(f'{highest["g"]} / {highest["b"]} / {highest["s"]}')
+
             self.update_or_create_allies(allies)
             self.create_historical_allies(allies)
+
+        print(f"'{highest['username']}' with {highest['total']=}")
 
         logger.info(f"Created {self.created_count} records")
         logger.info(f"Updated {self.updated_count} records")
@@ -103,7 +133,7 @@ class RandomAllyByPriceImporter(BaseAllyImporter):
             data = self.api.get_allies_by_price(price, 1)
         except TokenException as e:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                f"RandomAllyByPriceImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
             )
             time.sleep(60)
         allies = self.format_allies(data["allies"])
@@ -139,7 +169,7 @@ class AllyByNameImporter(BaseAllyImporter):
             logger.info(f"Keeping token alive: {stay_alive['timestamp']}")
         except TokenException as e:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                f"AllyByNameImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
             )
             time.sleep(60)
             data = self.api.get_ally_by_name(name)
@@ -165,7 +195,7 @@ class UpdateAllyImporter(BaseAllyImporter):
             data = self.api.get_ally_by_name(name)
         except TokenException as e:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                f"UpdateAllyImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
             )
             time.sleep(60)
             data = self.api.get_ally_by_name(name)
@@ -221,7 +251,7 @@ class ClanImporter:
             data = self.api.get_clan_by_id(group_id)
         except TokenException as e:
             logger.info(
-                f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                f"ClanImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
             )
             time.sleep(60)
         data = self.api.get_clan_by_id(group_id)
