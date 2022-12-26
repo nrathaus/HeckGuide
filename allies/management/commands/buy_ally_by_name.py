@@ -24,22 +24,25 @@ class Command(BaseCommand):
         staytoken = settings.STAY_ALIVE_TOKEN
         if options["token"] == 1:
             token = settings.HECKFIRE_API_TOKEN
-        elif options["token"] == 106:
-            token = settings.TOKEN_106
-        elif options["token"] == 10:
-            token = settings.TOKEN_10
-        elif options["token"] == 92:
-            token = settings.TOKEN_92
-        elif options["token"] == 99:
-            token = settings.TOKEN_99
-        elif options["token"] == 128:
-            token = settings.TOKEN_128
-        elif options["token"] == 129:
-            token = settings.TOKEN_129
-        elif options["token"] == 121:
-            token = settings.TOKEN_121
-        elif options["token"] == 130:
-            token = settings.TOKEN_130
+        # elif options["token"] == 106:
+        #     token = settings.TOKEN_106
+        # elif options["token"] == 10:
+        #     token = settings.TOKEN_10
+        # elif options["token"] == 92:
+        #     token = settings.TOKEN_92
+        # elif options["token"] == 99:
+        #     token = settings.TOKEN_99
+        # elif options["token"] == 128:
+        #     token = settings.TOKEN_128
+        # elif options["token"] == 129:
+        #     token = settings.TOKEN_129
+        # elif options["token"] == 121:
+        #     token = settings.TOKEN_121
+        # elif options["token"] == 130:
+        #     token = settings.TOKEN_130
+        else:
+            raise ValueError("Unsupported token value")
+        
         username = options["username"]
         api = HeckfireApi(token=token, staytoken=staytoken)
         ally = api.get_ally_by_name(username)
@@ -50,8 +53,9 @@ class Command(BaseCommand):
                 api.collect_loot()
                 api.buy_ally(user_id, cost)
                 api.stay_alive()
-                logger.info(f"Buying '{username}', ID: {user_id}, Cost: {cost}")
-            except TokenException as e:
-                logger.info(f"Exception: {e}")
-        except IndexError as e:
-            logger.info(f"User does not exist")
+                logger.info("Buying '%s', ID: %d, Cost: %d", username, user_id, cost)
+            except TokenException as exception:
+                logger.info("Exception: %s", exception)
+
+        except IndexError as _:
+            logger.info("User does not exist")
