@@ -21,6 +21,7 @@ class WorldImporter:
         self.webhooks = Webhooks.objects.all()
 
     def format_segments(self, segments) -> List[Dict]:
+        """ Format the response shown on a segement """
         results = []
         for segment in segments:
             try:
@@ -31,12 +32,19 @@ class WorldImporter:
                 }
                 if data["owner_username"]:
                     logger.info(
-                        f"Found player: {data['owner_username']} Clan: {data['owner_group_name']}"
+                        "Found player: %s Clan: %s",
+                        data['owner_username'], data['owner_group_name']
                     )
+
                 if "Titan [Lv" in data["name"]:
-                    self.api.message_clan(
-                        f"{data['name']} X: {data['x']} Y: {data['y']}"
+                    logger.info(
+                        "%s X: %d Y: %d", data['name'], data['x'], data['y']
                     )
+                    if settings.NOTIFY_TITAN:
+                        self.api.message_clan(
+                            f"{data['name']} X: {data['x']} Y: {data['y']}"
+                        )
+
                 for webhook in self.webhooks.iterator():
                     item = webhook.item
                     hookurl = webhook.hookurl
@@ -96,10 +104,12 @@ class WorldImporter:
                 logger.info(
                     f"Crawling bound: Lower Bound {[i for i in range(lowerbound, lowerbound + 20)]} Upper Bound {upperbound}"
                 )
-            except TokenException as e:
+            except TokenException as exception:
                 logger.info(
-                    f"Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                    "Token exception found, sleeping for 60 seconds before retry. Exception: %s",
+                    exception
                 )
+
                 time.sleep(60)
                 data = self.api.fetch_world(lowerbound)
             try:
