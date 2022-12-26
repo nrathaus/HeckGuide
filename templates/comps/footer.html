@@ -2,9 +2,12 @@
 <footer>
   <div class="container">
     <span class="center footer-menu-wrapper">
-      <img class="townhall" src="{% static 'img/png/townhall.png' %}">
+      <img class="townhall" src="{% static 'img/png/townhall.png' %}" />
       <nav>
-        <img class="menu-heckguide-logo" src="{% static 'img/svg/heckguide-logo.svg' %}">
+        <img
+          class="menu-heckguide-logo"
+          src="{% static 'img/svg/heckguide-logo.svg' %}"
+        />
         <div class="footer-menu">
           <ul class="flex-left">
             <li class="footer-ul-label">Heckguide</li>
@@ -57,28 +60,7 @@
             </li>
             {% if user.is_authenticated %}
             <li>
-              <a href="{% url 'world' %}?realm=10">Realm 10</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=23">Realm 23</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=92">Realm 92</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=99">Realm 99</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=106">Realm 106</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=121">Realm 121</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=128">Realm 128</a>
-            </li>
-            <li>
-              <a href="{% url 'world' %}?realm=129">Realm 129</a>
+              <a href="{% url 'world' %}?realm=145">Realm 145</a>
             </li>
             {% endif %}
           </ul>
@@ -86,16 +68,24 @@
             <li class="footer-ul-label">Stay Updated</li>
             <div class="center-flx footer-socials">
               <a href="https://discord.gg/typ4FSN3" target="_blank">
-                <li><img src="{% static 'img/svg/discord-ico.svg' %}"></li>
+                <li><img src="{% static 'img/svg/discord-ico.svg' %}" /></li>
               </a>
               <a href="https://twitter.com/heckguide?lang=en" target="_blank">
-                <li><img src="{% static 'img/svg/twitter-ico.svg' %}"></li>
+                <li><img src="{% static 'img/svg/twitter-ico.svg' %}" /></li>
               </a>
             </div>
           </ul>
         </div>
       </nav>
     </span>
-    <p>This content is not affiliated with, endorsed, sponsored, or specifically approved by A Thinking Ape Entertainment Ltd. and A Thinking Ape Entertainment Ltd. is not responsible for it. For more information see A Thinking Ape Entertainment Ltd's <a class="outer-links" href="https://kingdomsofheckfire.com/fankit.html">Fan Content Policy</a>.</p>
+    <p>
+      This content is not affiliated with, endorsed, sponsored, or specifically
+      approved by A Thinking Ape Entertainment Ltd. and A Thinking Ape
+      Entertainment Ltd. is not responsible for it. For more information see A
+      Thinking Ape Entertainment Ltd's
+      <a class="outer-links" href="https://kingdomsofheckfire.com/fankit.html"
+        >Fan Content Policy</a
+      >.
+    </p>
   </div>
 </footer>
