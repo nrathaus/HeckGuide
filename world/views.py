@@ -26,7 +26,7 @@ class WorldListView(LoginRequiredMixin, ListView):
         return object_list
 
     def get_context_data(self, **kwargs):
-        """ Context data for the HTML """
+        """Context data for the HTML"""
 
         data = super().get_context_data(**kwargs)
         object_list = WorldSegments.objects.all()
