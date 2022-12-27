@@ -81,20 +81,24 @@ class AllyByPriceImporter(BaseAllyImporter):
         )
 
         highest = {"total": 0, "price": 0}
-        limit = 500
+        limit = 50
+        sleep_time = 30
         for i in range(start_page, limit*page_count, limit):
-            print(f"page_count: {i}")
+            print(f"Page count: {i}")
             data = {'allies' : []}
             try:
                 data = self.api.get_allies_by_price(price=price, limit=limit, offset=i)
             except TokenException as exception:
                 logger.info(
-                    "AllyByPriceImporter - Token exception found, "
-                    "sleeping for 60 seconds before retry. Exception: %s", exception
+                    "AllyByPriceImporter - Token exception found\n"
+                    "Sleeping for %d seconds before retry.\n"
+                    "Exception: %s", sleep_time, exception
                 )
-                time.sleep(60)
+                time.sleep(sleep_time)
 
             allies = self.format_allies(data["allies"])
+            if len(allies) != limit:
+                print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}")
             for ally in allies:
                 total = (
                     ally["biome3_attack_multiplier"]
@@ -111,15 +115,19 @@ class AllyByPriceImporter(BaseAllyImporter):
                     highest["total"] = total
                     print(f"{highest['username']} with {total=}")
 
-            print(
-                f"'{highest['username']}' with {highest['total']=} for {highest['price']=:,}"
-            )
-            print(f'{highest["g"]} / {highest["b"]} / {highest["s"]}')
+            if 'username' in highest:
+                # Make sure the item is set
+                print(
+                    f"'{highest['username']}' with {highest['total']=} for {highest['price']=:,}"
+                )
+                print(f'{highest["g"]} / {highest["b"]} / {highest["s"]}')
 
             self.update_or_create_allies(allies)
             self.create_historical_allies(allies)
 
-        print(f"'{highest['username']}' with {highest['total']=}")
+        if 'username' in highest:
+            # Make sure the item is set
+            print(f"'{highest['username']}' with {highest['total']=}")
 
         logger.info(f"Created {self.created_count} records")
         logger.info(f"Updated {self.updated_count} records")
