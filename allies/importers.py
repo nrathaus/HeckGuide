@@ -84,21 +84,25 @@ class AllyByPriceImporter(BaseAllyImporter):
         limit = 50
         sleep_time = 30
         for i in range(start_page, limit*page_count, limit):
-            print(f"Page count: {i}")
             data = {'allies' : []}
-            try:
-                data = self.api.get_allies_by_price(price=price, limit=limit, offset=i)
-            except TokenException as exception:
-                logger.info(
-                    "AllyByPriceImporter - Token exception found\n"
-                    "Sleeping for %d seconds before retry.\n"
-                    "Exception: %s", sleep_time, exception
-                )
-                time.sleep(sleep_time)
+            while True:
+                # Loop if the exception occured (so we don't skip)
+                try:
+                    print(f"Page count: {i} out of {limit*page_count}")
+                    data = self.api.get_allies_by_price(price=price, limit=limit, offset=i)
+                except TokenException as exception:
+                    logger.info(
+                        "AllyByPriceImporter - Token exception found\n"
+                        "Sleeping for %d seconds before retry.\n"
+                        "Exception: %s", sleep_time, exception
+                    )
+                    time.sleep(sleep_time)
+                break
 
             allies = self.format_allies(data["allies"])
             if len(allies) != limit:
                 print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}")
+
             for ally in allies:
                 total = (
                     ally["biome3_attack_multiplier"]
