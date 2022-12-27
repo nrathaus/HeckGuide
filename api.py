@@ -116,7 +116,7 @@ class HeckfireApi(object):
         """Searches the ally api using max cost and page offset."""
         url = f"{self.base_url}/game/ally/search_allies"
         data = {"max_cost": price, "offset": offset, "limit": limit}
-        print(f"{data=}")
+        # print(f"{data=}")
 
         return self._post(url, data)
 
