@@ -80,6 +80,7 @@ class AllyByPriceImporter(BaseAllyImporter):
             price, page_count, start_page
         )
 
+        lowest_price = -1
         highest = {"total": 0, "price": 0}
         limit = 50
         sleep_time = 30
@@ -104,6 +105,12 @@ class AllyByPriceImporter(BaseAllyImporter):
                 print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}")
 
             for ally in allies:
+                if lowest_price == -1:
+                    lowest_price = ally["cost"]
+
+                if lowest_price > ally["cost"]:
+                    lowest_price = ally["cost"]
+
                 total = (
                     ally["biome3_attack_multiplier"]
                     + ally["biome4_attack_multiplier"]
@@ -125,6 +132,8 @@ class AllyByPriceImporter(BaseAllyImporter):
                     f"'{highest['username']}' with {highest['total']=} for {highest['price']=:,}"
                 )
                 print(f'{highest["g"]} / {highest["b"]} / {highest["s"]}')
+
+            print(f"Lowest price: {lowest_price}")
 
             self.update_or_create_allies(allies)
             self.create_historical_allies(allies)
