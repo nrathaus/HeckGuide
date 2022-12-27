@@ -112,10 +112,12 @@ class HeckfireApi(object):
         data = {"group_id": group_id}
         return self._post(url, data)
 
-    def get_allies_by_price(self, price: int, offset: int = 0) -> Dict:
+    def get_allies_by_price(self, price: int, limit: int, offset: int) -> Dict:
         """Searches the ally api using max cost and page offset."""
         url = f"{self.base_url}/game/ally/search_allies"
-        data = {"max_cost": price, "offset": offset}
+        data = {"max_cost": price, "offset": offset, "limit": limit}
+        print(f"{data=}")
+
         return self._post(url, data)
 
     def buy_ally(self, username: str, cost: int) -> Dict:
