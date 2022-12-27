@@ -27,6 +27,7 @@ class ClanChat(models.Model):
 
 
 class RealmList(models.Model):
+    """ Class holding all the realms """
     id = models.IntegerField(primary_key=True, db_index=True)
     spawned_user_count = models.IntegerField(null=True)
     maximum_transfer_power = models.IntegerField(null=True)
