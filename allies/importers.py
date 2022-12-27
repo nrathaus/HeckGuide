@@ -77,7 +77,9 @@ class AllyByPriceImporter(BaseAllyImporter):
             "Starting ally crawler for price: "
             "%d with page count: %d "
             "with start_page: %d",
-            price, page_count, start_page
+            price,
+            page_count,
+            start_page,
         )
 
         lowest_price = -1
@@ -85,25 +87,31 @@ class AllyByPriceImporter(BaseAllyImporter):
         limit = 50
         sleep_time = 30
         not_found = 0
-        for i in range(start_page, limit*page_count, limit):
-            data = {'allies' : []}
+        for i in range(start_page, limit * page_count, limit):
+            data = {"allies": []}
             while True:
                 # Loop if the exception occured (so we don't skip)
                 try:
                     print(f"Page count: {i} out of {limit*page_count}")
-                    data = self.api.get_allies_by_price(price=price, limit=limit, offset=i)
+                    data = self.api.get_allies_by_price(
+                        price=price, limit=limit, offset=i
+                    )
                 except TokenException as exception:
                     logger.info(
                         "AllyByPriceImporter - Token exception found\n"
                         "Sleeping for %d seconds before retry.\n"
-                        "Exception: %s", sleep_time, exception
+                        "Exception: %s",
+                        sleep_time,
+                        exception,
                     )
                     time.sleep(sleep_time)
                 break
 
             allies = self.format_allies(data["allies"])
             if len(allies) != limit:
-                print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}, {not_found=}")
+                print(
+                    f"WARNING: Allies count: {len(allies)} smaller than {limit=}, {not_found=}"
+                )
                 not_found += 1
             else:
                 not_found = 0
@@ -134,7 +142,7 @@ class AllyByPriceImporter(BaseAllyImporter):
                     highest["total"] = total
                     print(f"{highest['username']} with {total=}")
 
-            if 'username' in highest:
+            if "username" in highest:
                 # Make sure the item is set
                 print(
                     f"'{highest['username']}' with {highest['total']=} for {highest['price']=:,}"
@@ -146,7 +154,7 @@ class AllyByPriceImporter(BaseAllyImporter):
             self.update_or_create_allies(allies)
             self.create_historical_allies(allies)
 
-        if 'username' in highest:
+        if "username" in highest:
             # Make sure the item is set
             print(f"'{highest['username']}' with {highest['total']=}")
 
