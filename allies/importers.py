@@ -84,6 +84,7 @@ class AllyByPriceImporter(BaseAllyImporter):
         highest = {"total": 0, "price": 0}
         limit = 50
         sleep_time = 30
+        not_found = 0
         for i in range(start_page, limit*page_count, limit):
             data = {'allies' : []}
             while True:
@@ -102,7 +103,14 @@ class AllyByPriceImporter(BaseAllyImporter):
 
             allies = self.format_allies(data["allies"])
             if len(allies) != limit:
-                print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}")
+                print(f"WARNING: Allies count: {len(allies)} smaller than {limit=}, {not_found=}")
+                not_found += 1
+            else:
+                not_found = 0
+
+            if not_found > 10:
+                # Stop if 10 searches returned nothing
+                break
 
             for ally in allies:
                 if lowest_price == -1:
