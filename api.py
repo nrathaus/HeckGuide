@@ -82,6 +82,7 @@ class HeckfireApi(object):
         # print(f"{json_data=}")
         if json_data.get("exception"):
             raise TokenException(json_data["exception"])
+
         return json_data
 
     def collect_loot(self):
@@ -271,7 +272,7 @@ class HeckfireApi(object):
         return mails
 
     def _post(self, url: str, data: Dict) -> Dict:
-        """ Standarized POST request """
+        """Standarized POST request"""
         response = requests.post(
             url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT
         )
