@@ -42,7 +42,7 @@ class Command(BaseCommand):
         #     token = settings.TOKEN_130
         else:
             raise ValueError("Unsupported token value")
-        
+
         username = options["username"]
         api = HeckfireApi(token=token, staytoken=staytoken)
         ally = api.get_ally_by_name(username)
