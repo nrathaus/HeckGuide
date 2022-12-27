@@ -74,22 +74,26 @@ class BaseAllyImporter:
 class AllyByPriceImporter(BaseAllyImporter):
     def execute(self, price: int, page_count: int, start_page: int):
         logger.info(
-            f"Starting ally crawler for price: "
-            f"{price} with page count: {page_count} "
-            f"with start_page: {start_page}"
+            "Starting ally crawler for price: "
+            "%d with page count: %d "
+            "with start_page: %d",
+            price, page_count, start_page
         )
 
         highest = {"total": 0, "price": 0}
-        for i in range(start_page, page_count):
+        limit = 500
+        for i in range(start_page, limit*page_count, limit):
             print(f"page_count: {i}")
+            data = {'allies' : []}
             try:
-                data = self.api.get_allies_by_price(price, i)
-            except TokenException as e:
+                data = self.api.get_allies_by_price(price=price, limit=limit, offset=i)
+            except TokenException as exception:
                 logger.info(
-                    f"AllyByPriceImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
+                    "AllyByPriceImporter - Token exception found, "
+                    "sleeping for 60 seconds before retry. Exception: %s", exception
                 )
                 time.sleep(60)
-            data = self.api.get_allies_by_price(price, i)
+
             allies = self.format_allies(data["allies"])
             for ally in allies:
                 total = (
@@ -130,7 +134,7 @@ class RandomAllyByPriceImporter(BaseAllyImporter):
         price = random.randint(0, 8000000000)
         try:
             logger.info(f"Starting ally crawler for price: {price}")
-            data = self.api.get_allies_by_price(price, 1)
+            data = self.api.get_allies_by_price(price, 25, 0)
         except TokenException as e:
             logger.info(
                 f"RandomAllyByPriceImporter - Token exception found, sleeping for 60 seconds before retry. Exception: {e}"
