@@ -461,6 +461,19 @@ class BotMain(discord.Client):
         if message.author == self.user:
             return
 
+        # Make sure we are mentioned
+        its_for_me = False
+        if len(message.mentions) > 0:
+            for mention in message.mentions:
+                if mention.id == self.user.id:
+                    its_for_me = True
+                    break
+        else:
+            its_for_me = True
+
+        if not its_for_me:
+            return
+
         user = await client.fetch_user(message.author.id)
 
         content: str = message.clean_content
