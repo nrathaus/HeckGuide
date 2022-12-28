@@ -5,6 +5,7 @@ from typing import Dict, List
 import json
 import logging
 import requests
+import math
 
 import discord
 import environ
@@ -45,7 +46,16 @@ class Point:
 
     def return_segment(self):
         """Returns the closest segment"""
-        return int((self.x + self.y * 512) / 64)
+        # 512,0 X,Y -> 64
+        # 0,1024 X,Y -> 8192
+        x = math.ceil(self.x / 8)
+        x = x * 8
+        y = math.ceil(self.y / 64)
+        y = y * 64
+
+        segment = int((x + y * 64) / 8)
+
+        return segment
 
     def __lt__(self, other):
         if self.x < other.x and self.y < other.y:
@@ -118,7 +128,7 @@ class HFAPI:
         url = f"{self.base_url}/game/message/send_group_chat/"
         data = {"group_id": group_id, "message": message}
 
-        return self._post(url, data)
+        return await self._post(url, data)
 
     async def stay_alive(self):
         """Sends the first and second half of each token to
@@ -129,7 +139,11 @@ class HFAPI:
         }
         url = f"{self.base_url}/support/tickets/"
         req = requests.get(url, headers=data, timeout=REQUEST_TIMEOUT)
-        json_data = json.loads(req.text)
+
+        try:
+            json_data = json.loads(req.text)
+        except Exception as exception:
+            raise TokenException(exception)
 
         # print(f"{json_data=}")
         if json_data.get("exception"):
@@ -143,7 +157,7 @@ class HFAPI:
         data = {"max_cost": price, "offset": offset, "limit": limit}
         # print(f"{data=}")
 
-        return self._post(url, data)
+        return await self._post(url, data)
 
     async def collect_loot(self):
         """Collects any sold ally gold from the treasury."""
@@ -158,30 +172,36 @@ class HFAPI:
 
         return json_data
 
-    async def find_ally(self, message, price, page_count, start_count):
-        await message.channel.send(
+    async def find_ally(self, user, price, page_count, start_count):
+        price = int(price.replace(",", ""))
+        page_count = int(page_count)
+        limit = 50
+        start_count = int(start_count)
+
+        await user.send(
             "Starting ally crawler for price: "
-            f"{price} with page count: {page_count} "
+            f"{price:,} with page count: {page_count} "
             f"with start_page: {start_count}"
         )
 
         lowest_price = -1
         highest = {"total": 0, "price": 0}
         last_username = None
-        limit = 50
         sleep_time = 30
         not_found = 0
-        for i in range(start_count, limit * page_count, limit):
+        for i in range(limit * start_count, limit * (start_count + page_count), limit):
             data = {"allies": []}
             while True:
                 # Loop if the exception occured (so we don't skip)
                 try:
-                    await message.channel.send(
-                        f"Page count: {i} out of {limit*page_count}"
+                    await user.send(
+                        f"Page count: {i} out of {limit*(start_count+page_count)}"
                     )
-                    data = self.get_allies_by_price(price=price, limit=limit, offset=i)
+                    data = await self.get_allies_by_price(
+                        price=price, limit=limit, offset=i
+                    )
                 except TokenException as exception:
-                    await message.channel.send(
+                    await user.send(
                         "find_ally - Token exception found\n"
                         f"Sleeping for {sleep_time} seconds before retry.\n"
                         f"Exception: {exception}"
@@ -191,15 +211,15 @@ class HFAPI:
 
             allies = data["allies"]
             if len(allies) != limit:
-                await message.channel.send(
+                await user.send(
                     f"WARNING: Allies count: {len(allies)} smaller than {limit=}, {not_found=}"
                 )
                 not_found += 1
             else:
                 not_found = 0
 
-            if not_found > 10:
-                # Stop if 10 searches returned nothing
+            if not_found > 5:
+                # Stop if 5 searches returned nothing
                 break
 
             for ally in allies:
@@ -228,24 +248,25 @@ class HFAPI:
                 # Make sure the item is set
 
                 if last_username is None or last_username != highest["username"]:
-                    await message.channel.send(
+                    await user.send(
                         f"'{highest['username']}' with {highest['total']=} "
                         f"for {highest['price']=:,}"
                     )
-                    await message.channel.send(
-                        f'{highest["g"]} / {highest["b"]} / {highest["s"]}'
-                    )
+                    await user.send(f'{highest["g"]} / {highest["b"]} / {highest["s"]}')
 
                 last_username = highest["username"]
 
-            await message.channel.send(f"Lowest price: {lowest_price}")
+        await user.send(f"Lowest price: {lowest_price:,}")
 
         if "username" in highest:
             # Make sure the item is set
-            await message.channel.send(f"Final verdict {highest=}")
+            await user.send(f"Final verdict {highest=}")
 
         stay_alive = await self.stay_alive()
-        logger.info("Keeping token alive: %d", stay_alive["timestamp"])
+        if "timestamp" not in stay_alive:
+            print(f"EXCEPTION occured: {stay_alive['detail']}")
+        else:
+            logger.info("Keeping token alive: %d", stay_alive["timestamp"])
 
         logger.info("Collecting Loot")
         await self.collect_loot()
@@ -289,22 +310,21 @@ class BotMain(discord.Client):
         """Inform people we are ready"""
         print("Logged on as", self.user)
 
-    async def help(self, message):
+    async def help(self, content, user):
         """Help me..."""
 
         supported = {
-            "find_ally": {"parameters": ["price", "page_count", "start_count"]}
+            "find_ally": {"parameters": ["price", "page_count", "start_count"]},
+            "crawl_world": {"parameters": []},
         }
 
-        items = message.content.split(" ")
+        items = content.split(" ")
         if len(items) == 1:
-            await message.channel.send("Help")
+            await user.send("Help")
             for (cmd, cmd_item) in supported.items():
-                await message.channel.send(
-                    f"*{cmd}* - parameters: {cmd_item['parameters']}"
-                )
+                await user.send(f"*{cmd}* - parameters: {cmd_item['parameters']}")
 
-    async def crawl_world(self, message):
+    async def crawl_world(self, _, user):
         """Crawl a given map"""
 
         # X:0, Y:0 is segment 0
@@ -321,23 +341,25 @@ class BotMain(discord.Client):
         # (210+560*512)/64 -> 4483
         # (301+554*512)/64 -> 4436
 
-        lowerbound = Point(185, 445)
-        upperbound = Point(315, 575)
-        current_position = lowerbound
+        # Titan 5 284:496, 291:511
+
+        lowerbound = Point(200, 460)
+        upperbound = Point(310, 560)
+        current_position = Point(lowerbound.x, lowerbound.y)
 
         api_endpoint = HFAPI()
-        await message.channel.send("Starting to crawl")
+        await user.send("Starting to crawl")
 
         while True:
             segments = []
             while True:
                 try:
-                    print(f"C{current_position.return_segment()=}")
+                    await user.send(f"{current_position.return_segment()=}")
                     segments = await api_endpoint.fetch_world(
                         current_position.return_segment()
                     )
                 except TokenException as exception:
-                    await message.channel.send(
+                    await user.send(
                         f"Token exception found, sleeping for 60 seconds before retry. "
                         f"Exception: {exception}"
                     )
@@ -346,21 +368,22 @@ class BotMain(discord.Client):
 
                 break
 
+            await user.send(f"Found {len(segments)} segments")
             for (idx, segment) in enumerate(segments):
                 if idx == 0:
-                    await message.channel.send(
-                        f'X: {segment["x"]} ' f'Y: {segment["y"]} <- {lowerbound.return_segment()}'
+                    await user.send(
+                        f'X: {segment["x"]} '
+                        f'Y: {segment["y"]} <- {lowerbound.return_segment()}'
                     )
 
                 # if segment["owner_username"]:
-                #     logger.info(
-                #         "Found player: %s Clan: %s",
-                #         segment["owner_username"],
-                #         segment["owner_group_name"],
+                #     await user.send(
+                #         f'Found player: {segment["owner_username"]}, '
+                #         f'Clan: {segment["owner_group_name"]}'
                 #     )
 
                 if "Titan [Lv" in segment["name"]:
-                    await message.channel.send(
+                    await user.send(
                         f'{segment["name"]} X: {segment["x"]} Y: {segment["y"]}'
                     )
 
@@ -369,29 +392,31 @@ class BotMain(discord.Client):
                     #         f"{segment['name']} X: {segment['x']} Y: {segment['y']}"
                     #     )
 
-            current_position.x += 64
+            current_position.x += 8
             if current_position.x > upperbound.x:
-                await message.channel.send("Rolling back to the left")
-                current_position.y += 64
+                await user.send("Rolling back to the left")
                 current_position.x = lowerbound.x
+                current_position.y += 8
 
             if current_position.y > upperbound.y:
-                await message.channel.send("Done inside loop")
+                await user.send("Done inside loop")
                 break
 
             stay_alive = await api_endpoint.stay_alive()
-            print(f"Keeping token alive: {stay_alive['timestamp']}")
+            if "timestamp" not in stay_alive:
+                print(f"EXCEPTION occured: {stay_alive['detail']}")
+            else:
+                print(f"Keeping token alive: {stay_alive['timestamp']}")
 
             logger.info("Collecting Loot")
             await api_endpoint.collect_loot()
             logger.info("Done")
 
-        await message.channel.send("Done loop")
+        await user.send("Done loop")
 
-
-    async def find_ally(self, message):
+    async def find_ally(self, content, user):
         """Find me an ally"""
-        items = message.content.split(" ")
+        items = content.split(" ")
         price = 100
         page_count = 10
         start_count = 0
@@ -403,13 +428,11 @@ class BotMain(discord.Client):
         if len(items) > 3:
             start_count = items[3]
 
-        await message.channel.send(
-            f"find_ally(message, {price=}, {page_count=}, {start_count=})"
-        )
+        await user.send(f"find_ally(message, {price=}, {page_count=}, {start_count=})")
 
         api_endpoint = HFAPI()
-        await api_endpoint.find_ally(message, price, page_count, start_count)
-        # await message.channel.send(f"{highest=}")
+        await api_endpoint.find_ally(user, price, page_count, start_count)
+        # await message.reply(f"{highest=}")
 
     async def on_message(self, message):
         """Message handler"""
@@ -418,20 +441,32 @@ class BotMain(discord.Client):
         if message.author == self.user:
             return
 
-        print(f"{message.content=}")
-        if message.content.startswith("help"):
-            await self.help(message)
-        elif message.content.startswith("crawl_world"):
-            await self.crawl_world(message)
-        elif message.content.startswith("find_ally"):
-            await self.find_ally(message)
-        elif message.content == "ping":
-            await message.channel.send("pong")
+        user = await client.fetch_user(message.author.id)
+
+        content: str = message.clean_content
+
+        if message.clean_content != message.content:
+            # It means there is a mention there.. clean it
+            space = content.find(" ")
+            if space is not None:
+                content = content[space + 1 :]
+
+        print(f"{content=}")
+        if content.startswith("help"):
+            await self.help(content, user)
+        elif content.startswith("crawl_world"):
+            await self.crawl_world(content, user)
+        elif content.startswith("find_ally"):
+            await self.find_ally(content, user)
+        elif content == "ping":
+            await message.reply("pong")
         else:
-            print(f"Unknown content: {message.content=}")
+            await message.reply("Unknown command", mention_author=True)
 
 
-intents = discord.Intents.default()
+# intents = discord.Intents.default()
+intents = discord.Intents.all()
+
 client = BotMain(intents=intents)
 
 client.run(discord_token)
