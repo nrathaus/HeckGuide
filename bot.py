@@ -33,6 +33,13 @@ else:
 REQUEST_TIMEOUT = 5
 
 
+def divide_chunks(l, n):
+
+    # looping till length l
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
+
+
 class TokenException(Exception):
     """Empty class"""
 
@@ -274,7 +281,7 @@ class HFAPI:
 
         return highest
 
-    async def fetch_world(self, sgement: int):
+    async def fetch_world(self, segment_ids: List[int]):
         """
         Fetches up to 20 chunks of world map data only taking the 'sites' chunk of response.
         NOTE: 20 is the api limit.
@@ -282,7 +289,7 @@ class HFAPI:
         tiles = []
         url = f"{self.base_url}/game/nonessential/poll_segments_realm_state"
         # data = {"segment_ids": [i for i in range(lowerbound, lowerbound + 20)]}
-        data = {"segment_ids": [sgement]}
+        data = {"segment_ids": segment_ids}
 
         req = requests.post(
             url, headers=self.headers, data=data, timeout=REQUEST_TIMEOUT
@@ -350,14 +357,32 @@ class BotMain(discord.Client):
         api_endpoint = HFAPI()
         await user.send("Starting to crawl")
 
+        # Relevant segments
+        segment_ids = set()
         while True:
+            segment_ids.add(current_position.return_segment())
+
+            current_position.x += 8
+            if current_position.x > upperbound.x:
+                current_position.x = lowerbound.x
+                current_position.y += 8
+
+            if current_position.y > upperbound.y:
+                break
+
+        segment_ids = list(segment_ids)
+        segment_ids.sort()
+        # await user.send(f"Relevant segments: {segment_ids}")
+
+        # We need to do this in chunks of 20
+        segment_chunks_ids = divide_chunks(segment_ids, 20)
+
+        for segment_chunks_id in segment_chunks_ids:
             segments = []
             while True:
                 try:
-                    await user.send(f"{current_position.return_segment()=}")
-                    segments = await api_endpoint.fetch_world(
-                        current_position.return_segment()
-                    )
+                    # await user.send(f"{segment_chunks_id=}")
+                    segments = await api_endpoint.fetch_world(list(segment_chunks_id))
                 except TokenException as exception:
                     await user.send(
                         f"Token exception found, sleeping for 60 seconds before retry. "
@@ -382,6 +407,11 @@ class BotMain(discord.Client):
                 #         f'Clan: {segment["owner_group_name"]}'
                 #     )
 
+                # if "Titan Trove" in segment["name"]:
+                #     await user.send(
+                #         f'{segment["name"]} X: {segment["x"]} Y: {segment["y"]}'
+                #     )
+
                 if "Titan [Lv" in segment["name"]:
                     await user.send(
                         f'{segment["name"]} X: {segment["x"]} Y: {segment["y"]}'
@@ -391,16 +421,6 @@ class BotMain(discord.Client):
                     #     api_endpoint.message_clan(
                     #         f"{segment['name']} X: {segment['x']} Y: {segment['y']}"
                     #     )
-
-            current_position.x += 8
-            if current_position.x > upperbound.x:
-                await user.send("Rolling back to the left")
-                current_position.x = lowerbound.x
-                current_position.y += 8
-
-            if current_position.y > upperbound.y:
-                await user.send("Done inside loop")
-                break
 
             stay_alive = await api_endpoint.stay_alive()
             if "timestamp" not in stay_alive:
