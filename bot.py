@@ -4,40 +4,98 @@ import time
 from typing import Dict, List
 import json
 import logging
-import requests
 import math
 
+import requests
 import discord
 import environ
+
+# In seconds
+REQUEST_TIMEOUT = 5
+
+def login(username, password) -> str:
+    json_data = {
+        "bundle_id": "ata.kraken.heckfire",
+        "unity_uuid": "817b2a60ae392eb03ed99378ba789acd",
+        "os_name": "Android",
+        "android_id": "309d26b91717f17c",
+        "android_advertising": "dff7bf49-e56f-4ca1-8bf8-676e919f58be",
+        "app_set_id": "ba3be074-2eb8-963d-329e-e9650dbbc358",
+        "ether_map": {},
+        "os_version": "Android OS 12 / API-31 (SP1A.210812.016/A137FXXU1AVH1)",
+        "device_model": "SM-A137F",
+        "hardware_version": "samsung SM-A137F",
+        "limit_ad_tracking": False,
+        "screen_width": 1080,
+        "screen_height": 2342,
+        "locale": "en-GB",
+        "os_build": "Build/SP1A.210812.016",
+    }
+
+    json_dump = json.dumps(json_data, separators=(",", ":"))
+
+    data = {
+        "grant_type": "password",
+        "client_version": "2.28.837437069",
+        "channel_id": "16",
+        "client_id": "ata.kraken.heckfire",
+        "client_secret": "n0ts0s3cr3t",
+        "scope": "[]",
+        "version": "3432",
+        "include_tech_tree": False,
+        "username" : username,
+        "password" : password,
+        "client_information": json_dump,
+    }
+
+    headers = {
+        "User-Agent": "ata bundle_id=ata.kraken.heckfire version=2.28.837437069",
+        "Accept": "application/json",
+        "Accept-Language": "en-GB",
+        "Host": "api.kingdomsofheckfire.com",
+    }
+
+    url = "https://api.kingdomsofheckfire.com/game/auth/oauth/"
+    response = requests.post(url, data=data, headers=headers, timeout=REQUEST_TIMEOUT)
+
+    json_data = response.json()
+    refresh_token = json_data['refresh_token']
+    access_token = json_data['access_token']
+
+    return (access_token, refresh_token)
 
 logger = logging.getLogger(__name__)
 
 root_env = environ.Env()
 root_env.read_env()
 
-hf_env = environ.Env()
-hf_env.read_env("heckguide/.env")
+# hf_env = environ.Env()
+# hf_env.read_env("heckguide/.env")
 
-hf_token = hf_env("TOKEN")
-hf_staytoken = hf_env("STAY_TOKEN")
+hf_username = root_env.get_value("HF_USERNAME", default="")
+hf_password = root_env.get_value("HF_PASSWORD", default="")
+
+if hf_username == "" or hf_password == "":
+    hf_token = root_env.get_value("TOKEN", default=None)
+    hf_staytoken = root_env.get_value("STAY_TOKEN", default=None)
+else:
+    # User login method
+    (hf_token, hf_staytoken) = login(hf_username, hf_password)
+    hf_staytoken = "qAF6SgkN5dne0tB2IUwcxf/Ymhb4V9q9KhV+4OftruWUxHYHQAHTJNS4Ld7Z03lXTuDpLOOYy4iNCNp92mV6nw=="
 
 discord_token = root_env("DISCORD_TOKEN")
 
-NOTIFY_TITAN = hf_env("NOTIFY_TITAN")
+NOTIFY_TITAN = root_env.get_value("NOTIFY_TITAN", default=True)
 if NOTIFY_TITAN == "False":
     NOTIFY_TITAN = False
 else:
     NOTIFY_TITAN = True
 
-# In seconds
-REQUEST_TIMEOUT = 5
 
-
-def divide_chunks(l, n):
-
-    # looping till length l
-    for i in range(0, len(l), n):
-        yield l[i : i + n]
+def divide_chunks(list_items, number):
+    """ looping till length l """
+    for i in range(0, len(list_items), number):
+        yield list_items[i : i + number]
 
 
 class TokenException(Exception):
@@ -385,7 +443,8 @@ class BotMain(discord.Client):
                     segments = await api_endpoint.fetch_world(list(segment_chunks_id))
                 except TokenException as exception:
                     await user.send(
-                        f"Token exception found, sleeping for 60 seconds before retry. "
+                        "crawl_world - Token exception found, sleeping for "
+                        "60 seconds before retry. "
                         f"Exception: {exception}"
                     )
 
@@ -424,7 +483,7 @@ class BotMain(discord.Client):
 
             stay_alive = await api_endpoint.stay_alive()
             if "timestamp" not in stay_alive:
-                print(f"EXCEPTION occured: {stay_alive['detail']}")
+                print(f"crawl_world - EXCEPTION occured: {stay_alive['detail']}")
             else:
                 print(f"Keeping token alive: {stay_alive['timestamp']}")
 
@@ -485,6 +544,8 @@ class BotMain(discord.Client):
                 content = content[space + 1 :]
 
         print(f"{content=}")
+        start = time.time()
+
         if content.startswith("help"):
             await self.help(content, user)
         elif content.startswith("crawl_world"):
@@ -492,10 +553,11 @@ class BotMain(discord.Client):
         elif content.startswith("find_ally"):
             await self.find_ally(content, user)
         elif content == "ping":
-            await message.reply("pong")
+            await user.send("pong")
         else:
-            await message.reply("Unknown command", mention_author=True)
-
+            await user.send("Unknown command", mention_author=True)
+        end = time.time()
+        await user.send(f"elapsed: {end-start:.2f}s")
 
 # intents = discord.Intents.default()
 intents = discord.Intents.all()
